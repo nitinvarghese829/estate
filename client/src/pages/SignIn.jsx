@@ -1,41 +1,47 @@
 import React from 'react'
 import {QueryClientProvider, useMutation, useQueryClient} from "@tanstack/react-query";
 import {Link, useNavigate} from "react-router-dom";
-import axios from "axios";
 import {useForm} from "react-hook-form";
 
+import { useDispatch, useSelector } from "react-redux";
+import { signInStart, signInFailure, signInSuccess } from "../redux/user/userSlice.js";
+
 export default function SignIn() {
-    const queryClient = useQueryClient();
     const navigate = useNavigate();
-    const signup = (data) => {
-        return axios.post(`/api/auth/signin`, data).then((res) => {
-            setTimeout(() => {
-                navigate('/home');
-            }, 2000);
-            return res;
-        }).catch((err) => {
-            return(err.response);
-        });
+    const dispatch = useDispatch();
+    const { loading, error } = useSelector((state) => {
+        console.log(state.user);
+        return state.user
+    });
+    const signIn = async (data) => {
+
+        try{
+            dispatch(signInStart());
+            const res = await fetch(`/api/auth/signin`, {
+                method: 'POST',
+                headers: {
+                    'Content-type': 'application/json',
+                },
+                body: JSON.stringify(data),
+            });
+            const jsonData = await res.json()
+
+            if (jsonData.success === false){
+                dispatch(signInFailure(jsonData.message));
+                return;
+            }
+            dispatch(signInSuccess(data));
+            navigate('/')
+        } catch (e) {
+            dispatch(signInFailure(e.message));
+        }
+
     }
 
-    const {mutate, isLoading, error, data} = useMutation({
-        mutationFn: (formData) => { return signup(formData) },
-        onSuccess: () => {
-            // Invalidate and refetch
-            queryClient.invalidateQueries({ queryKey: ['signup'] });
-        },
-    });
-
-    console.log(error, data);
     const { handleSubmit, register, formState: { errors } } = useForm({});
 
     const onSubmit = (data) => {
-        console.log(data);
-        // mutateAsync().then(res => {
-        //     if(res.data.success){
-        mutate(data);
-        //     }
-        // });
+         signIn(data);
     };
 
     return (
@@ -53,7 +59,7 @@ export default function SignIn() {
                 </div>
 
                 <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
-                    <QueryClientProvider client={queryClient}>
+
                         <form className="space-y-6" action="#" method="POST" onSubmit={handleSubmit(onSubmit)}>
 
                             <div>
@@ -93,7 +99,7 @@ export default function SignIn() {
                                     type="submit"
                                     className="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
                                 >
-                                    {isLoading ? (
+                                    {loading ? (
                                         <div
                                             className="inline-block h-6 w-6 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"
                                             role="status">
@@ -101,17 +107,16 @@ export default function SignIn() {
                                                   className="!absolute !-m-px !h-px !w-px !overflow-hidden !whitespace-nowrap !border-0 !p-0 ![clip:rect(0,0,0,0)]"
                                               >Loading...</span>
                                         </div>
-                                    ) : 'Sign Up'}
+                                    ) : 'Sign In'}
                                 </button>
                             </div>
                         </form>
 
-                    </QueryClientProvider>
 
                     <div className={'py-3 alert'}>
-                        {data && data?.data?.statusCode !== 200 && (
+                        {error && (
                             <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
-                                <p className={'text-red-500 text-xs'}>{data?.data?.message}</p>
+                                <p className={'text-red-500 text-xs'}>{error}</p>
                             </div>
                         )}
 
