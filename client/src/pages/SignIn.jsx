@@ -5,6 +5,8 @@ import {useForm} from "react-hook-form";
 
 import { useDispatch, useSelector } from "react-redux";
 import { signInStart, signInFailure, signInSuccess } from "../redux/user/userSlice.js";
+import OAuth from "../components/OAuth.jsx";
+import {Loader} from "../components/Loader.jsx";
 
 export default function SignIn() {
     const navigate = useNavigate();
@@ -30,7 +32,7 @@ export default function SignIn() {
                 dispatch(signInFailure(jsonData.message));
                 return;
             }
-            dispatch(signInSuccess(data));
+            dispatch(signInSuccess(jsonData));
             navigate('/')
         } catch (e) {
             dispatch(signInFailure(e.message));
@@ -94,21 +96,18 @@ export default function SignIn() {
                                 </div>
                             </div>
 
-                            <div>
+                            <div className={'grid gap-3'}>
                                 <button
+                                    disabled={loading}
                                     type="submit"
                                     className="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
                                 >
                                     {loading ? (
-                                        <div
-                                            className="inline-block h-6 w-6 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"
-                                            role="status">
-                                              <span
-                                                  className="!absolute !-m-px !h-px !w-px !overflow-hidden !whitespace-nowrap !border-0 !p-0 ![clip:rect(0,0,0,0)]"
-                                              >Loading...</span>
-                                        </div>
+                                        <Loader />
                                     ) : 'Sign In'}
                                 </button>
+
+                                <OAuth />
                             </div>
                         </form>
 

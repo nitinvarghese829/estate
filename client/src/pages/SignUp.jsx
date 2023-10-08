@@ -6,6 +6,7 @@ import {useQuery,
     QueryClientProvider,} from "@tanstack/react-query";
 import {useForm} from "react-hook-form";
 import axios from 'axios';
+import OAuth from "../components/OAuth.jsx";
 
 export default function SignUp() {
     const queryClient = useQueryClient();
@@ -122,6 +123,8 @@ export default function SignUp() {
                                         </div>
                                     ) : 'Sign Up'}
                                 </button>
+
+                                <OAuth />
                             </div>
                         </form>
 
