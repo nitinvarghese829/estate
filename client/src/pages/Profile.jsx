@@ -5,6 +5,8 @@ import {Link} from "react-router-dom";
 import {useForm} from "react-hook-form";
 import {getStorage, ref, uploadBytesResumable, getDownloadURL} from "firebase/storage";
 import {app} from "../firebase.js";
+import {updateUserSuccess, updateUserFailure, updateUserStart} from "../redux/user/userSlice.js";
+import {useDispatch} from "react-redux";
 
 export default function Profile() {
 
@@ -17,6 +19,7 @@ export default function Profile() {
     const [file, setFile] = useState(undefined);
     const [uploadPercent, setUploadPercent] = useState(0);
     const [uploadError, setUploadError] = useState(false);
+    const dispatch = useDispatch();
 
     const [imgUrl, setImgUrl] = useState(null);
     const fileRef = useRef(null);
@@ -28,8 +31,29 @@ export default function Profile() {
         },
     });
 
-    const onSubmit = (data) => {
-      console.log(data);
+    console.log(currentUser);
+
+    const onSubmit = async (data) => {
+        try{
+            dispatch(updateUserStart());
+            const res = await fetch(`/api/user/update/${currentUser._id}`, {
+                method: 'POST',
+                headers: {
+                    'Content-type': 'application/json',
+                },
+                body: JSON.stringify(data),
+            });
+            const jsonData = await res.json()
+
+            if (jsonData.success === false){
+                dispatch(updateUserFailure(jsonData.message));
+                return;
+            }
+            dispatch(updateUserSuccess(jsonData));
+            // navigate('/')
+        } catch (e) {
+            dispatch(updateUserFailure(e.message));
+        }
     }
     
     const handleFileUpload = (file) => {
