@@ -5,7 +5,7 @@ import {Link, useNavigate} from "react-router-dom";
 import {useForm} from "react-hook-form";
 import {getStorage, ref, uploadBytesResumable, getDownloadURL} from "firebase/storage";
 import {app} from "../firebase.js";
-import {updateUserSuccess, updateUserFailure, updateUserStart, deleteUserFailure, deleteUserSuccess, deleteUserStart} from "../redux/user/userSlice.js";
+import {updateUserSuccess, updateUserFailure, updateUserStart, deleteUserFailure, deleteUserSuccess, deleteUserStart, signOutUserSuccess, signOutUserFailure, signOutUserStart} from "../redux/user/userSlice.js";
 import {useDispatch} from "react-redux";
 import axios from "axios";
 
@@ -90,12 +90,34 @@ export default function Profile() {
                 dispatch(updateUserFailure(jsonData.message));
                 return;
             }
-            dispatch(updateUserSuccess(jsonData));
+            dispatch(deleteUserSuccess());
             navigate("/sign-up")
         } catch (e) {
             dispatch(deleteUserFailure(e.message));
         }
 
+    }
+    
+    const handleSignOut = async () => {
+      try{
+          dispatch(signOutUserStart());
+          const res = await fetch(`/api/auth/signOut`, {
+              method: 'GET',
+              headers: {
+                  'Content-type': 'application/json',
+              }
+          });
+          const jsonData = await res.json()
+
+          if (jsonData.success === false){
+              dispatch(signOutUserFailure(jsonData.message));
+              return;
+          }
+          dispatch(signOutUserSuccess());
+      }
+      catch (e) {
+          dispatch(signOutUserFailure(e));
+      }
     }
 
     useEffect(() => {
@@ -193,7 +215,7 @@ export default function Profile() {
 
                 <div className={'flex justify-between my-4'}>
                     <span onClick={handleDelete} className={'text-red-600 hover:text-red-400 cursor-pointer'}>{loading ? 'loading' : 'Delete Account'}</span>
-                    <span className={'text-red-600 hover:text-red-400 cursor-pointer'}>Sign Out</span>
+                    <span onClick={handleSignOut} className={'text-red-600 hover:text-red-400 cursor-pointer'}>Sign Out</span>
                 </div>
 
 
