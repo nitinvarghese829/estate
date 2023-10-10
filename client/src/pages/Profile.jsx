@@ -1,12 +1,13 @@
 import React, {useRef, useState, useEffect} from 'react'
 
 import {useSelector} from "react-redux";
-import {Link} from "react-router-dom";
+import {Link, useNavigate} from "react-router-dom";
 import {useForm} from "react-hook-form";
 import {getStorage, ref, uploadBytesResumable, getDownloadURL} from "firebase/storage";
 import {app} from "../firebase.js";
-import {updateUserSuccess, updateUserFailure, updateUserStart} from "../redux/user/userSlice.js";
+import {updateUserSuccess, updateUserFailure, updateUserStart, deleteUserFailure, deleteUserSuccess, deleteUserStart} from "../redux/user/userSlice.js";
 import {useDispatch} from "react-redux";
+import axios from "axios";
 
 export default function Profile() {
 
@@ -20,6 +21,8 @@ export default function Profile() {
     const [uploadPercent, setUploadPercent] = useState(0);
     const [uploadError, setUploadError] = useState(false);
     const dispatch = useDispatch();
+    const navigate = useNavigate();
+    const {loading} = useSelector((state) => state.user);
 
     const [imgUrl, setImgUrl] = useState(null);
     const fileRef = useRef(null);
@@ -75,6 +78,23 @@ export default function Profile() {
           })
       });
 
+
+    }
+
+    const handleDelete = async () => {
+        dispatch(deleteUserStart());
+        try{
+            const jsonData = await axios.delete(`api/user/delete/${currentUser._id}`)
+
+            if (jsonData.success === false){
+                dispatch(updateUserFailure(jsonData.message));
+                return;
+            }
+            dispatch(updateUserSuccess(jsonData));
+            navigate("/sign-up")
+        } catch (e) {
+            dispatch(deleteUserFailure(e.message));
+        }
 
     }
 
@@ -172,7 +192,7 @@ export default function Profile() {
                 </form>
 
                 <div className={'flex justify-between my-4'}>
-                    <span className={'text-red-600 hover:text-red-400 cursor-pointer'}>Delete Account</span>
+                    <span onClick={handleDelete} className={'text-red-600 hover:text-red-400 cursor-pointer'}>{loading ? 'loading' : 'Delete Account'}</span>
                     <span className={'text-red-600 hover:text-red-400 cursor-pointer'}>Sign Out</span>
                 </div>
 
